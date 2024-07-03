@@ -1,10 +1,12 @@
 package com.sgu.game.Main;
 
 import com.sgu.game.Constant;
-import com.sgu.game.Utils.CollisionUtils;
 import com.sgu.game.Utils.SoundUtils;
 import com.sgu.game.Utils.Window;
 import com.sgu.game.entity.*;
+import com.sgu.game.entity.able.Collidable;
+import com.sgu.game.entity.able.Hitable;
+import com.sgu.game.entity.able.Recyclable;
 import com.sgu.game.entity.wall.*;
 import org.lwjgl.input.Keyboard;
 
@@ -17,20 +19,25 @@ public class GameWindow extends Window {
     }
     ArrayList<Element> Elements = new ArrayList();
     TankElement userTank;
+    EnemyTankElement enemyTank;
     BossElement boss;
 
 
     @Override
     protected void onCreate() {
         try {
-            SoundUtils.play("tankwar_v2.0_byLwjgl\\audio/start.wav");
+            SoundUtils.play("tankwar_v2.0_byLwjgl\\audio\\start.wav");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        userTank = new TankElement(0, 0);
+        userTank = new TankElement(0,  0);
+        Elements.add(userTank);
+        enemyTank = new EnemyTankElement(64 * 22, 0);
+        Elements.add(enemyTank);
         mapInit();
         boss = new BossElement(64*11, 64*11);
+        Elements.add(boss);
     }
 
     @Override
@@ -41,16 +48,16 @@ public class GameWindow extends Window {
     @Override
     protected void onKeyEvent(int key) {
         switch (key) {
-            case Keyboard.KEY_UP:
+            case Keyboard.KEY_W:
                 userTank.move(Direction.UP);
                 break;
-            case Keyboard.KEY_DOWN:
+            case Keyboard.KEY_S:
                 userTank.move(Direction.DOWN);
                 break;
-            case Keyboard.KEY_LEFT:
+            case Keyboard.KEY_A:
                 userTank.move(Direction.LEFT);
                 break;
-            case Keyboard.KEY_RIGHT:
+            case Keyboard.KEY_D:
                 userTank.move(Direction.RIGHT);
                 break;
             case Keyboard.KEY_SPACE:
@@ -62,35 +69,56 @@ public class GameWindow extends Window {
 
     @Override
     protected void onDisplayUpdate() {
+        userTank.draw();
         for (int i = 0; i < Elements.size(); i++) {
-            userTank.draw();
+
             Element element = Elements.get(i);
             element.draw();
 
-            if((element instanceof BulletElement) && ((BulletElement) element).isOutSize())
-                Elements.remove(element);
-
-            if((element instanceof Collidable) && CollisionUtils.isCollisionWithElement(userTank, element)){
-                userTank.unMove = userTank.getDirection();
-//                switch (userTank.unMove = userTank.getDirection()){
-//                    case UP :
-//                        userTank.y = element.y + element.height;
-//                        break;
-//                    case DOWN:
-//                        userTank.y = element.y - userTank.height;
-//                        break;
-//                    case LEFT:
-//                        userTank.x = element.x + element.width;
-//                        break;
-//                    case RIGHT:
-//                        userTank.x = element.x - userTank.width;
-//                        break;
-//                }
-            }else{
-                userTank.unMove = null;
+            if(element instanceof Recyclable){
+                if(!((Recyclable) element).isLife()) Elements.remove(element);
             }
-        }
 
+            //判断子弹击中墙体或者坦克
+            if(element instanceof BulletElement){
+                //element对象为子弹
+                BulletElement bullet = (BulletElement) element;
+                for (int j = 0; j < Elements.size(); j++) {
+                    //element2对象为可击打的对象，如部分墙体
+                    Element element2 = Elements.get(j);
+                    if((element2 instanceof Hitable) && bullet.isCollide(element2)){
+                        Elements.remove(bullet);
+                        Elements.add(((Hitable) element2).broken());
+                        try {
+                            SoundUtils.play("tankwar_v2.0_byLwjgl\\audio\\boom.wav");
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }
+
+            //判断主坦克和敌人坦克是否碰撞墙体
+            if(element instanceof Collidable){
+                if(userTank.isCollide(element)) userTank.unMove = userTank.getDirection();
+                if(enemyTank.isCollide(element)) enemyTank.unMove = enemyTank.getDirection();
+            }
+
+            //敌方坦克发射子弹
+            if(element instanceof EnemyTankElement){
+                BulletElement bullet = ((EnemyTankElement) element).fire();
+                if(bullet != null)
+                    Elements.add(bullet);
+                //判断坦克碰撞
+                if(((EnemyTankElement) element).isCollide(userTank)){
+                    userTank.broken();
+                    userTank.unMove = userTank.getDirection();
+                    enemyTank.unMove = enemyTank.getDirection();
+                }
+            }
+
+
+        }
     }
 
     private void mapInit(){

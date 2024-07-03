@@ -1,8 +1,11 @@
 package com.sgu.game.entity;
 
 import com.sgu.game.Constant;
+import com.sgu.game.Utils.CollisionUtils;
+import com.sgu.game.entity.able.Recyclable;
 
-public class BulletElement extends Element {
+public class BulletElement extends Element implements Recyclable {
+    int speed = 10;
     Direction d;
     //调用了子弹的无参构造 所以并没有给子弹的path属性赋值 导致在绘制子弹图片时 出现空指针异常
     public BulletElement() {
@@ -56,27 +59,52 @@ public class BulletElement extends Element {
         switch (d) {
             case UP:
                 //Y轴坐标在减小
-                super.y -= 10;
+                super.y -= speed;
                 break;
             case DOWN:
                 //Y轴坐标在增加
-                super.y += 10;
+                super.y += speed;
                 break;
             case LEFT:
                 //X轴坐标在减小
-                super.x -= 10;
+                super.x -= speed;
                 break;
             case RIGHT:
                 //X轴坐标在增加
-                super.x += 10;
+                super.x += speed;
                 break;
         }
     }
-    public boolean isOutSize(){
-        boolean flag = false;
+    public boolean isLife(){
+        boolean flag = true;
         if(super.x + super.width < 0 || super.y + super.height < 0 || super.x > Constant.width || super.y > Constant.height){
-            flag = true;
+            flag = false;
         }
         return flag;
+    }
+
+    public boolean isCollide(Element colElement) {
+        int x = super.x;
+        int y = super.y;
+        switch (d) {
+            case UP:
+                y -= speed;
+                break;
+            case DOWN:
+                y += speed;
+                break;
+            case LEFT:
+                x -= speed;
+                break;
+            case RIGHT:
+                x += speed;
+                break;
+        }
+        return CollisionUtils.isCollisionWithRect(x, y, super.width, super.height,
+                colElement.x, colElement.y, colElement.width, colElement.height);
+    }
+
+    public Direction getDirection() {
+        return d;
     }
 }

@@ -1,8 +1,9 @@
 package com.sgu.game.entity.wall;
 
 import com.sgu.game.entity.Element;
+import com.sgu.game.entity.able.Collidable;
 
-public class WaterWallElement extends Element implements Collidable{
+public class WaterWallElement extends Element implements Collidable {
     public WaterWallElement() {
     }
 
