@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="lwjgl">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/tankwar_v2.0_byLwjgl/lib/lwjgl.jar!/" />
+      <root url="jar://$PROJECT_DIR$/tankwar_v2.0_byLwjgl/lib/slick-util.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Tankwar.iml" filepath="$PROJECT_DIR$/Tankwar.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tankwar_v1.0_bySwing/tankwar_v1.0_bySwing.iml" filepath="$PROJECT_DIR$/tankwar_v1.0_bySwing/tankwar_v1.0_bySwing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tankwar_v2.0_byLwjgl/tankwar_v2.0_byLwjgl.iml" filepath="$PROJECT_DIR$/tankwar_v2.0_byLwjgl/tankwar_v2.0_byLwjgl.iml" />
+    </modules>
+  </component>
+</project>
