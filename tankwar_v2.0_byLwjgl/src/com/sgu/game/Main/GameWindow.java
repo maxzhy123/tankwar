@@ -1,6 +1,8 @@
 package com.sgu.game.Main;
 
 import com.sgu.game.Constant;
+import com.sgu.game.Utils.CollisionUtils;
+import com.sgu.game.Utils.DrawUtils;
 import com.sgu.game.Utils.SoundUtils;
 import com.sgu.game.Utils.Window;
 import com.sgu.game.entity.*;
@@ -19,9 +21,9 @@ public class GameWindow extends Window {
     }
     ArrayList<Element> Elements = new ArrayList();
     TankElement userTank;
-    EnemyTankElement enemyTank;
+    ArrayList<EnemyTankElement> enemyTanks = new ArrayList<>();
     BossElement boss;
-
+    BuffElement buff;
 
     @Override
     protected void onCreate() {
@@ -30,14 +32,16 @@ public class GameWindow extends Window {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        userTank = new TankElement(0,  0);
+        //Elements[0]是玩家坦克，Elements[1]是boss，Elements[2]——Elements[enemyTanks+2]是敌人坦克，
+        userTank = new TankElement(64*2,  0);
         Elements.add(userTank);
-        enemyTank = new EnemyTankElement(64 * 22, 0);
-        Elements.add(enemyTank);
-        mapInit();
         boss = new BossElement(64*11, 64*11);
         Elements.add(boss);
+        enemyTanks.add(new EnemyTankElement(0, 64*8));
+        enemyTanks.add(new EnemyTankElement(64*18, 0));
+        enemyTanks.add(new EnemyTankElement(64*8, 64*11));
+        Elements.addAll(enemyTanks);
+        mapInit();
     }
 
     @Override
@@ -69,11 +73,27 @@ public class GameWindow extends Window {
 
     @Override
     protected void onDisplayUpdate() {
-        userTank.draw();
+        boolean userColFlag = true;
+        boolean enemyColFlag = true;
+        boolean isGameOver = false;
+        boolean isBuff = false;
+        if(userTank.HP <= 0 || boss.HP <= 0) isGameOver = true;
+
+        if(isGameOver){
+            try {
+                DrawUtils.draw("tankwar_v2.0_byLwjgl\\img\\gameover.png", 64*6, 64*2);
+                Elements.clear();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         for (int i = 0; i < Elements.size(); i++) {
 
             Element element = Elements.get(i);
             element.draw();
+
+
 
             if(element instanceof Recyclable){
                 if(!((Recyclable) element).isLife()) Elements.remove(element);
@@ -98,10 +118,23 @@ public class GameWindow extends Window {
                 }
             }
 
-            //判断主坦克和敌人坦克是否碰撞墙体
-            if(element instanceof Collidable){
-                if(userTank.isCollide(element)) userTank.unMove = userTank.getDirection();
-                if(enemyTank.isCollide(element)) enemyTank.unMove = enemyTank.getDirection();
+            //判断主坦克是否碰撞墙体
+            if(element instanceof Collidable && userColFlag){
+                if(userTank.isCollide(element)) {
+                    userTank.unMove = userTank.getDirection();
+                    userColFlag = false;
+                }
+            }
+
+            //判断敌人坦克是否碰撞墙体
+            if(element instanceof Collidable && enemyColFlag){
+                for (int j = 0; j < enemyTanks.size(); j++) {
+                    EnemyTankElement enemyTank = enemyTanks.get(j);
+                    if(enemyTank.isCollide(element)) {
+                        enemyTank.unMove = enemyTank.getDirection();
+                        enemyColFlag = false;
+                    }
+                }
             }
 
             //敌方坦克发射子弹
@@ -109,18 +142,35 @@ public class GameWindow extends Window {
                 BulletElement bullet = ((EnemyTankElement) element).fire();
                 if(bullet != null)
                     Elements.add(bullet);
-                //判断坦克碰撞
-                if(((EnemyTankElement) element).isCollide(userTank)){
-                    userTank.broken();
-                    userTank.unMove = userTank.getDirection();
-                    enemyTank.unMove = enemyTank.getDirection();
+            }
+
+            //判断坦克吃到buff
+            if(element instanceof BuffElement) {
+                for (int j = 0; j < Elements.size(); j++) {
+                    if(((BuffElement) element).isGetBuff(userTank)){
+                        Elements.remove(element);
+                        userTank.setSpeed(32);
+                        userTank.setFireInterval(100);
+                        userTank.getBuffTime = System.currentTimeMillis();
+                        isBuff = true;
+                    }
                 }
             }
 
-
+            //判断buff生效时间以及生成buff
+            if(isBuff || buff == null){
+                if(System.currentTimeMillis() - userTank.getBuffTime > 5000) {
+                    userTank.setSpeed(16);
+                    userTank.setFireInterval(300);
+                    isBuff = false;
+                    buff = buff.getBuff();
+                    Elements.add(buff);
+                }
+            }
         }
     }
 
+    //地图初始化
     private void mapInit(){
         //循环的次数 屏幕的宽度/64
         for (int i = 0; i < Constant.width / 64; i++) {

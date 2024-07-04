@@ -115,6 +115,7 @@ public class EnemyTankElement extends Element implements Hitable, Recyclable {
     public boolean isCollide(Element colElement){
         int x = super.x;
         int y = super.y;
+        boolean flag;
         switch (d){
             case UP :
                 y -= speed;
@@ -129,8 +130,11 @@ public class EnemyTankElement extends Element implements Hitable, Recyclable {
                 x += speed;
                 break;
         }
-        return CollisionUtils.isCollisionWithRect(x, y, super.width, super.height,
+        flag = CollisionUtils.isCollisionWithRect(x, y, super.width, super.height,
                 colElement.x, colElement.y, colElement.width, colElement.height);
+
+        if(!flag) unMove = null;
+        return flag;
     }
 
     @Override

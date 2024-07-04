@@ -1,6 +1,7 @@
 package com.sgu.game.entity;
 
 import com.sgu.game.Constant;
+import com.sgu.game.Main.GameWindow;
 import com.sgu.game.Utils.CollisionUtils;
 import com.sgu.game.Utils.SoundUtils;
 import com.sgu.game.entity.able.Hitable;
@@ -10,8 +11,10 @@ import java.io.IOException;
 
 public class TankElement extends Element implements Hitable {
     private int speed = 16; //移动速度
-    long fireInterval = 300;
-    long lastFireTime;
+    private long fireInterval = 300;
+    private long lastFireTime;
+
+    public long getBuffTime;
     Direction d = Direction.UP;
     public Direction unMove = null;
 
@@ -49,19 +52,15 @@ public class TankElement extends Element implements Hitable {
             //如果传递进来的方向和当前坦克方向不一致 那么需要先改变绘制的图片的方向 再修改坐标
             switch (d) {
                 case UP:
-                    unMove = null;
                     this.path = "tankwar_v2.0_byLwjgl\\img\\tank_u.gif";
                     break;
                 case DOWN:
-                    unMove = null;
                     this.path = "tankwar_v2.0_byLwjgl\\img\\tank_d.gif";
                     break;
                 case LEFT:
-                    unMove = null;
                     this.path = "tankwar_v2.0_byLwjgl\\img\\tank_l.gif";
                     break;
                 case RIGHT:
-                    unMove = null;
                     this.path = "tankwar_v2.0_byLwjgl\\img\\tank_r.gif";
                     break;
             }
@@ -111,6 +110,7 @@ public class TankElement extends Element implements Hitable {
     public boolean isCollide(Element colElement){
         int x = super.x;
         int y = super.y;
+        boolean flag;
         switch (d){
             case UP :
                 y -= speed;
@@ -125,16 +125,26 @@ public class TankElement extends Element implements Hitable {
                 x += speed;
                 break;
         }
-        return CollisionUtils.isCollisionWithRect(x, y, super.width, super.height,
+        flag = CollisionUtils.isCollisionWithRect(x, y, super.width, super.height,
                 colElement.x, colElement.y, colElement.width, colElement.height);
+
+        if(!flag) unMove = null;
+        return flag;
     }
     public Direction getDirection() {
         return d;
     }
 
+    public void setSpeed(int speed) {
+        this.speed = speed;
+    }
+
+    public void setFireInterval(long fireInterval) {
+        this.fireInterval = fireInterval;
+    }
+
     @Override
     public BombElement broken() {
-        System.out.println(HP);
         super.HP--;
         return new BombElement(this);
     }
